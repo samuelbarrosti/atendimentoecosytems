@@ -1,0 +1,24 @@
+ARQUIVOS ATUALIZADOS
+
+Substitua no seu projeto:
+- index.html
+- style.css
+- script.js
+
+No Firebase:
+1. Abra Firestore Database.
+2. Entre na aba Regras.
+3. Substitua pelas regras do arquivo firestore.rules.
+4. Clique em Publicar.
+
+A nova coleção "clientes" será criada automaticamente no primeiro cadastro.
+
+Permissões:
+- Usuário aprovado: consulta e cria clientes e atendimentos.
+- Administrador: consulta, cria, edita e exclui.
+- Somente administrador aprova usuários.
+
+Depois:
+- Salve os arquivos.
+- Reinicie o Live Server.
+- Atualize a página com Ctrl + F5.

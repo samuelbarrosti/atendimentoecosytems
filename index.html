@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <meta
+    name="description"
+    content="Sistema de registros de atendimento ao cliente"
+  />
+
+  <title>Registro de Atendimento Ecosystems</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- ========================= -->
+  <!-- LOGIN -->
+  <!-- ========================= -->
+
+  <section id="telaLogin" class="auth-screen">
+
+    <form id="formLogin" class="auth-card">
+
+      <p class="eyebrow">ACESSO RESTRITO</p>
+
+      <h1>Registro de Atendimento Ecosystems</h1>
+
+      <p class="subtitle">
+        Entre com seu e-mail e senha.
+      </p>
+
+      <div class="field">
+        <label for="emailLogin">E-mail</label>
+
+        <input
+          id="emailLogin"
+          type="email"
+          autocomplete="username"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="senhaLogin">Senha</label>
+
+        <input
+          id="senhaLogin"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <button
+        class="btn btn-primary auth-button"
+        type="submit"
+      >
+        Entrar
+      </button>
+
+      <button
+        id="abrirCadastro"
+        class="auth-link"
+        type="button"
+      >
+        Ainda não possui acesso? Cadastre-se
+      </button>
+
+      <p
+        id="erroLogin"
+        class="auth-error"
+        aria-live="polite"
+      ></p>
+
+      <div class="login-footer">
+
+        <span>Desenvolvido por</span>
+
+        <a
+          href="https://www.linkedin.com/in/samuel-barros-413304117/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="login-footer-link"
+        >
+          Samuel Barros
+        </a>
+
+      </div>
+
+    </form>
+
+
+    <!-- ========================= -->
+    <!-- CADASTRO -->
+    <!-- ========================= -->
+
+    <form id="formCadastro" class="auth-card hidden">
+
+      <p class="eyebrow">SOLICITAR ACESSO</p>
+
+      <h1>Criar cadastro</h1>
+
+      <p class="subtitle">
+        Após o cadastro, sua conta ficará aguardando autorização do administrador.
+      </p>
+
+      <div class="field">
+        <label for="nomeCadastro">Nome completo</label>
+
+        <input
+          id="nomeCadastro"
+          type="text"
+          maxlength="150"
+          autocomplete="name"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="emailCadastro">E-mail</label>
+
+        <input
+          id="emailCadastro"
+          type="email"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="senhaCadastro">Senha</label>
+
+        <input
+          id="senhaCadastro"
+          type="password"
+          minlength="6"
+          autocomplete="new-password"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="confirmarSenhaCadastro">
+          Confirmar senha
+        </label>
+
+        <input
+          id="confirmarSenhaCadastro"
+          type="password"
+          minlength="6"
+          autocomplete="new-password"
+          required
+        />
+      </div>
+
+      <button
+        class="btn btn-primary auth-button"
+        type="submit"
+      >
+        Solicitar cadastro
+      </button>
+
+      <button
+        id="voltarLogin"
+        class="auth-link"
+        type="button"
+      >
+        Voltar para o login
+      </button>
+
+      <p
+        id="erroCadastro"
+        class="auth-error"
+        aria-live="polite"
+      ></p>
+
+    </form>
+
+
+    <!-- ========================= -->
+    <!-- AGUARDANDO APROVAÇÃO -->
+    <!-- ========================= -->
+
+    <div id="telaPendente" class="auth-card hidden">
+
+      <p class="eyebrow">
+        CADASTRO RECEBIDO
+      </p>
+
+      <h1>Aguardando autorização</h1>
+
+      <p class="subtitle">
+        Sua solicitação foi registrada. Você poderá entrar depois que seu acesso for aprovado.
+      </p>
+
+      <p
+        id="emailPendente"
+        class="pending-email"
+      ></p>
+
+      <button
+        id="sairPendente"
+        class="btn btn-secondary auth-button"
+        type="button"
+      >
+        Voltar
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ========================= -->
+  <!-- APLICAÇÃO -->
+  <!-- ========================= -->
+
+  <div id="aplicacao" class="hidden">
+
+    <header class="topbar">
+
+      <div>
+
+        <p class="eyebrow">
+          PAINEL DE ATENDIMENTO
+        </p>
+
+        <h1>
+          Registro de Atendimento Clientes Ecosystems
+        </h1>
+
+        <p class="subtitle">
+          Cadastre empresas e mantenha um histórico completo dos atendimentos.
+        </p>
+
+      </div>
+
+      <div class="topbar-actions">
+
+        <span
+          id="statusNuvem"
+          class="cloud-status"
+        >
+          Conectando...
+        </span>
+
+        <button
+          id="btnSair"
+          class="btn btn-secondary"
+          type="button"
+        >
+          Sair
+        </button>
+
+        <button
+          id="btnNovo"
+          class="btn btn-primary"
+          type="button"
+        >
+          + Novo registro
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <main class="layout">
+
+
+      <!-- ========================= -->
+      <!-- LISTA DE ATENDIMENTOS -->
+      <!-- ========================= -->
+
+      <section
+        class="panel list-panel"
+        aria-labelledby="tituloLista"
+      >
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2 id="tituloLista">
+              Atendimentos registrados
+            </h2>
+
+            <p id="contadorRegistros">
+              0 registros
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="search-box">
+
+          <label for="campoBusca">
+            Buscar atendimento
+          </label>
+
+          <input
+            id="campoBusca"
+            type="search"
+            placeholder="Nome, categoria, situação, fantasia, número, login ou comentário..."
+            autocomplete="off"
+          />
+
+        </div>
+
+
+        <div class="history-search-box">
+
+          <label for="campoHistorico">
+            Histórico completo do cliente
+          </label>
+
+          <p>
+            Pesquise por nome do cliente, nome fantasia ou CNPJ.
+          </p>
+
+          <div class="history-search-actions">
+
+            <input
+              id="campoHistorico"
+              type="search"
+              placeholder="Digite o nome, nome fantasia ou CNPJ..."
+              autocomplete="off"
+            />
+
+            <button
+              id="btnVerHistorico"
+              class="btn btn-primary"
+              type="button"
+            >
+              Ver histórico
+            </button>
+
+          </div>
+
+          <div
+            id="sugestoesHistorico"
+            class="history-suggestions hidden"
+          ></div>
+
+        </div>
+
+        <div
+          id="listaRegistros"
+          class="records-list"
+          aria-live="polite"
+        ></div>
+
+      </section>
+
+
+      <!-- ========================= -->
+      <!-- APROVAÇÕES -->
+      <!-- ========================= -->
+
+      <section
+        id="painelAprovacoes"
+        class="panel approvals-panel hidden"
+        aria-labelledby="tituloAprovacoes"
+      >
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2 id="tituloAprovacoes">
+              Solicitações de acesso
+            </h2>
+
+            <p>
+              Aprove ou recuse novos usuários.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div
+          id="listaAprovacoes"
+          class="approval-list"
+        ></div>
+
+      </section>
+
+
+      <!-- ========================= -->
+      <!-- CADASTRO CLIENTE -->
+      <!-- ========================= -->
+
+      <section
+        class="panel clientes-panel"
+        aria-labelledby="tituloCadastroCliente"
+      >
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2 id="tituloCadastroCliente">
+              Cadastrar novo cliente
+            </h2>
+
+            <p>
+              Informe os dados da empresa.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <form
+          id="formCliente"
+          class="cliente-form"
+          novalidate
+        >
+
+          <div class="field">
+
+            <label for="cnpjCliente">
+              CNPJ
+            </label>
+
+            <input
+              id="cnpjCliente"
+              name="cnpjCliente"
+              type="text"
+              inputmode="numeric"
+              maxlength="18"
+              placeholder="00.000.000/0000-00"
+              required
+            />
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="razaoSocialCliente">
+              Razão social
+            </label>
+
+            <input
+              id="razaoSocialCliente"
+              name="razaoSocialCliente"
+              type="text"
+              maxlength="200"
+              placeholder="Digite a razão social"
+              required
+            />
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="nomeFantasiaCliente">
+              Nome fantasia
+            </label>
+
+            <input
+              id="nomeFantasiaCliente"
+              name="nomeFantasiaCliente"
+              type="text"
+              maxlength="200"
+              placeholder="Digite o nome fantasia"
+              required
+            />
+
+          </div>
+
+
+          <div class="form-actions">
+
+            <button
+              id="limparCliente"
+              class="btn btn-secondary"
+              type="button"
+            >
+              Limpar
+            </button>
+
+            <button
+              class="btn btn-primary"
+              type="submit"
+            >
+              Cadastrar cliente
+            </button>
+
+          </div>
+
+        </form>
+
+
+        <div class="clientes-lista-header">
+
+          <h3>
+            Clientes cadastrados
+          </h3>
+
+          <span id="contadorClientes">
+            0 clientes
+          </span>
+
+        </div>
+
+
+        <div
+          id="listaClientesCadastrados"
+          class="clientes-cadastrados"
+          aria-live="polite"
+        ></div>
+
+      </section>
+
+
+      <!-- ========================= -->
+      <!-- FORMULÁRIO ATENDIMENTO -->
+      <!-- ========================= -->
+
+      <section
+        class="panel form-panel"
+        aria-labelledby="tituloFormulario"
+      >
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2 id="tituloFormulario">
+              Novo registro
+            </h2>
+
+            <p>
+              Preencha os dados do atendimento.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <form
+          id="formRegistro"
+          novalidate
+        >
+
+          <input
+            id="registroId"
+            type="hidden"
+          />
+
+
+          <div class="form-grid">
+
+
+            <!-- CLIENTE -->
+
+            <div class="field field-full">
+
+              <label for="clienteAtendimento">
+                Cliente cadastrado
+              </label>
+
+              <select
+                id="clienteAtendimento"
+                name="clienteAtendimento"
+                required
+              >
+
+                <option value="">
+                  Selecione o cliente
+                </option>
+
+              </select>
+
+              <small>
+                A seleção vincula o atendimento ao CNPJ e permite consultar todo o histórico.
+              </small>
+
+            </div>
+
+
+            <!-- CNPJ -->
+
+            <div class="field">
+
+              <label for="cnpjAtendimento">
+                CNPJ
+              </label>
+
+              <input
+                id="cnpjAtendimento"
+                name="cnpjAtendimento"
+                type="text"
+                readonly
+                placeholder="Selecione um cliente"
+              />
+
+            </div>
+
+
+            <!-- LOGIN -->
+
+            <div class="field">
+
+              <label for="numeroLogin">
+                Número ou login do cliente
+              </label>
+
+              <input
+                id="numeroLogin"
+                name="numeroLogin"
+                type="text"
+                maxlength="150"
+                placeholder="Ex.: 10245, cliente@email.com ou @usuario"
+                required
+              />
+
+            </div>
+
+
+            <!-- PESSOA -->
+
+            <div class="field">
+
+              <label for="nomeCliente">
+                Nome da pessoa atendida
+              </label>
+
+              <input
+                id="nomeCliente"
+                name="nomeCliente"
+                type="text"
+                maxlength="200"
+                placeholder="Digite o nome da pessoa"
+                required
+              />
+
+            </div>
+
+
+            <!-- NOME FANTASIA -->
+
+            <div class="field">
+
+              <label for="nomeFantasia">
+                Nome fantasia
+              </label>
+
+              <input
+                id="nomeFantasia"
+                name="nomeFantasia"
+                type="text"
+                maxlength="200"
+                placeholder="Preenchido pelo cliente selecionado"
+                readonly
+                required
+              />
+
+            </div>
+
+
+            <!-- CATEGORIA -->
+
+            <div class="field">
+
+              <label for="categoriaAtendimento">
+                Categoria do atendimento
+              </label>
+
+              <select
+                id="categoriaAtendimento"
+                name="categoriaAtendimento"
+                required
+              >
+
+                <option value="">
+                  Selecione uma categoria
+                </option>
+
+                <option value="Notas fiscais">
+                  Notas fiscais
+                </option>
+
+                <option value="Atendimento">
+                  Atendimento
+                </option>
+
+                <option value="Certificado digital">
+                  Certificado digital
+                </option>
+
+                <option value="Boleto">
+                  Boleto
+                </option>
+
+                <option value="Treinamento">
+                  Treinamento
+                </option>
+
+                <option value="Importação">
+                  Importação
+                </option>
+
+                <option value="Contador">
+                  Contador
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <!-- ========================= -->
+            <!-- SITUAÇÃO -->
+            <!-- ========================= -->
+
+            <div class="field">
+
+              <label for="situacao">
+                Situação
+              </label>
+
+              <select
+                id="situacao"
+                name="situacao"
+                required
+              >
+
+                <option value="">
+                  Selecione a situação
+                </option>
+
+                <option value="em-andamento">
+                  Em andamento
+                </option>
+
+                <option value="pendente">
+                  Pendente
+                </option>
+
+                <option value="concluido">
+                  Concluído
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+
+          <!-- COMENTÁRIOS -->
+
+          <div class="field">
+
+            <label for="comentarios">
+              Registro completo do atendimento
+            </label>
+
+            <textarea
+              id="comentarios"
+              name="comentarios"
+              rows="14"
+              placeholder="Descreva tudo o que foi conversado, orientações, pendências e próximos passos..."
+              required
+            ></textarea>
+
+            <small>
+              O registro ficará vinculado ao cliente e ao atendente responsável.
+            </small>
+
+          </div>
+
+
+          <div class="form-actions">
+
+            <button
+              id="btnCancelar"
+              class="btn btn-secondary"
+              type="button"
+            >
+              Limpar
+            </button>
+
+            <button
+              class="btn btn-primary"
+              type="submit"
+            >
+              Salvar registro
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+    </main>
+
+
+    <!-- ========================= -->
+    <!-- MODAL -->
+    <!-- ========================= -->
+
+    <div
+      id="modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitulo"
+    >
+
+      <div class="modal-card">
+
+        <div class="modal-header">
+
+          <div>
+
+            <p class="eyebrow">
+              DETALHES DO REGISTRO
+            </p>
+
+            <h2 id="modalTitulo">
+              Atendimento
+            </h2>
+
+          </div>
+
+          <button
+            id="fecharModal"
+            class="icon-button"
+            type="button"
+            aria-label="Fechar"
+          >
+            ×
+          </button>
+
+        </div>
+
+        <div
+          id="modalConteudo"
+          class="modal-content"
+        ></div>
+
+
+        <div class="modal-actions">
+
+          <button
+            id="editarModal"
+            class="btn btn-secondary"
+            type="button"
+          >
+            Editar
+          </button>
+
+          <button
+            id="excluirModal"
+            class="btn btn-danger"
+            type="button"
+          >
+            Excluir
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- HISTÓRICO -->
+    <!-- ========================= -->
+
+    <section
+      id="telaHistorico"
+      class="history-screen hidden"
+      aria-labelledby="historicoTitulo"
+    >
+
+      <header class="history-topbar">
+
+        <div>
+
+          <p class="eyebrow">
+            HISTÓRICO COMPLETO
+          </p>
+
+          <h2 id="historicoTitulo">
+            Histórico do cliente
+          </h2>
+
+          <p
+            id="historicoResumo"
+            class="subtitle"
+          ></p>
+
+        </div>
+
+        <button
+          id="fecharHistorico"
+          class="btn btn-secondary"
+          type="button"
+        >
+          Fechar histórico
+        </button>
+
+      </header>
+
+
+      <div
+        id="historicoClienteDados"
+        class="history-client-data"
+      ></div>
+
+
+      <div
+        id="historicoLista"
+        class="history-timeline"
+      ></div>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- FOOTER -->
+    <!-- ========================= -->
+
+    <footer class="footer">
+
+      <p>
+        © 2026 Desenvolvido por
+
+        <a
+          href="https://www.linkedin.com/in/samuel-barros-413304117/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="footer-link"
+        >
+          Samuel Barros
+        </a>.
+
+        Todos os direitos reservados.
+      </p>
+
+      <p>
+        Sistema de Registros de Clientes Ecosystems - Versão 2.0
+      </p>
+
+    </footer>
+
+
+    <div
+      id="toast"
+      class="toast"
+      role="status"
+      aria-live="polite"
+    ></div>
+
+  </div>
+
+
+  <script
+    type="module"
+    src="script.js"
+  ></script>
+
+</body>
+
+</html>

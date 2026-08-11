@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "atendimento-ecosystens"
+  },
+  "targets": {
+    "atendimento-ecosystens": {
+      "hosting": {
+        "ecosystems": [
+          "atendimento-ecosystems"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
