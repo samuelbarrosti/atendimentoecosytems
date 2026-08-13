@@ -148,6 +148,19 @@ const comentarios = $("comentarios");
 
 
 /* ========================================= */
+/* REGISTRO DO ATENDIMENTO EM MAIÚSCULAS */
+/* ========================================= */
+
+comentarios.addEventListener(
+  "blur",
+  () => {
+    comentarios.value =
+      comentarios.value.toUpperCase();
+  }
+);
+
+
+/* ========================================= */
 /* LISTAGEM */
 /* ========================================= */
 
@@ -2858,6 +2871,12 @@ form.addEventListener(
       return;
 
     }
+
+
+    /* GARANTE MAIÚSCULAS ANTES DE SALVAR */
+
+    comentarios.value =
+      comentarios.value.toUpperCase();
 
 
     const dados = {
