@@ -43,6 +43,31 @@ https://atendimento-ecosystems.web.app
 
 ```text
 /
+
+## 🔄 Melhorias futuras
+
+- Dashboard de atendimentos
+- Controle de prioridade
+- Data e horário de retorno
+- Alertas de pendências atrasadas
+- Filtros avançados
+- Exportação de relatórios
+
+---
+
+## 👨‍💻 Desenvolvido por
+
+Projeto desenvolvido por **Samuel Barros**, responsável pelo desenvolvimento da interface, implementação das funcionalidades, regras de negócio, integração com Firebase, versionamento e publicação da aplicação.
+
+O projeto demonstra na prática conhecimentos em **HTML, CSS, JavaScript, Firebase, Git e GitHub**, aplicados na construção de uma solução para gerenciamento de atendimentos.
+
+**Samuel Barros**  
+Desenvolvedor Front-End  
+GitHub: [samuelbarrosti](https://github.com/samuelbarrosti)
+
+---
+
+© 2026 Samuel Barros. Todos os direitos reservados.
 ├── index.html
 ├── style.css
 ├── script.js
