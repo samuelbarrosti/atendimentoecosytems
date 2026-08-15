@@ -40,6 +40,7 @@ const db = getFirestore(app);
 const registrosRef = collection(db, "registrosClientes");
 
 const clientesRef = collection(db, "clientes");
+const EMAIL_ADMIN_CLIENTES = "samuelleonardo2011@hotmail.com";
 
 
 /* ========================================= */
@@ -89,6 +90,8 @@ const emailPendente = $("emailPendente");
 
 const btnSair = $("btnSair");
 
+const saudacaoUsuario = $("saudacaoUsuario");
+
 const statusNuvem = $("statusNuvem");
 
 
@@ -118,6 +121,8 @@ const limparCliente = $("limparCliente");
 const listaClientesCadastrados = $("listaClientesCadastrados");
 
 const contadorClientes = $("contadorClientes");
+const listaClientesArquivados = $("listaClientesArquivados");
+const contadorClientesArquivados = $("contadorClientesArquivados");
 
 
 /* ========================================= */
@@ -156,6 +161,34 @@ comentarios.addEventListener(
   () => {
     comentarios.value =
       comentarios.value.toUpperCase();
+  }
+);
+
+
+/* Nome da pessoa atendida: primeira letra de cada nome em maiúscula */
+nomeCliente.addEventListener(
+  "blur",
+  () => {
+    nomeCliente.value =
+      formatarNomePessoa(nomeCliente.value);
+  }
+);
+
+/* Razão social: sempre em maiúsculas */
+razaoSocialCliente.addEventListener(
+  "blur",
+  () => {
+    razaoSocialCliente.value =
+      formatarMaiusculo(razaoSocialCliente.value);
+  }
+);
+
+/* Nome fantasia: sempre em maiúsculas */
+nomeFantasiaCliente.addEventListener(
+  "blur",
+  () => {
+    nomeFantasiaCliente.value =
+      formatarMaiusculo(nomeFantasiaCliente.value);
   }
 );
 
@@ -231,6 +264,7 @@ const toast = $("toast");
 let registros = [];
 
 let clientes = [];
+let clienteEditandoId = null;
 
 let registroSelecionadoId = null;
 
@@ -255,6 +289,16 @@ let usuarioAtualUid = "";
 /* ESCAPAR HTML */
 /* ========================================= */
 
+function podeGerenciarClientes() {
+  return (
+    String(usuarioAtualEmail || "")
+      .trim()
+      .toLowerCase() ===
+    EMAIL_ADMIN_CLIENTES
+  );
+}
+
+
 const escaparHTML = (valor) =>
   String(valor ?? "")
     .replaceAll("&", "&amp;")
@@ -277,6 +321,24 @@ const normalizar = (valor = "") =>
 
 const somenteNumeros = (valor = "") =>
   String(valor).replace(/\D/g, "");
+
+
+/* ========================================= */
+/* FORMATAÇÃO DE TEXTOS */
+/* ========================================= */
+
+const formatarNomePessoa = (valor = "") =>
+  String(valor)
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/(^|\s|[-'])\p{L}/gu, (trecho) => trecho.toUpperCase());
+
+const formatarMaiusculo = (valor = "") =>
+  String(valor)
+    .toUpperCase()
+    .trim()
+    .replace(/\s+/g, " ");
 
 
 /* ========================================= */
@@ -404,6 +466,42 @@ function mostrarToast(mensagem, erro = false) {
 
 
 /* ========================================= */
+/* SAUDAÇÃO DO USUÁRIO */
+/* ========================================= */
+
+function atualizarSaudacaoUsuario() {
+
+  if (!saudacaoUsuario) return;
+
+  if (!usuarioAtualNome) {
+    saudacaoUsuario.textContent = "";
+    return;
+  }
+
+  const hora = new Date().getHours();
+
+  let periodo;
+
+  if (hora <= 12) {
+    periodo = "Bom dia";
+  } else if (hora <= 17) {
+    periodo = "Boa tarde";
+  } else {
+    periodo = "Boa noite";
+  }
+
+  saudacaoUsuario.textContent =
+    `Olá, ${periodo}, ${usuarioAtualNome}`;
+
+}
+
+setInterval(
+  atualizarSaudacaoUsuario,
+  60 * 1000
+);
+
+
+/* ========================================= */
 /* TELAS LOGIN */
 /* ========================================= */
 
@@ -440,9 +538,18 @@ function configurarPermissoesVisuais() {
     !usuarioAtualEhAdmin
   );
 
+  // Solicitações de acesso aparecem somente na tela inicial
+  // e somente para o administrador.
+  const menuPrincipal =
+    document.getElementById("menuPrincipalSistema");
+
+  const estaNaTelaInicial =
+    menuPrincipal &&
+    !menuPrincipal.classList.contains("hidden");
+
   painelAprovacoes.classList.toggle(
     "hidden",
-    !usuarioAtualEhAdmin
+    !usuarioAtualEhAdmin || !estaNaTelaInicial
   );
 
 }
@@ -473,6 +580,9 @@ function obterClientePorCnpj(cnpj) {
 
 function preencherSelectClientes() {
 
+  const clientesAtivosSelect = clientes.filter((cliente) => !cliente.arquivado);
+
+
   const valorAtual =
     clienteAtendimento.value;
 
@@ -481,7 +591,7 @@ function preencherSelectClientes() {
       Selecione o cliente
     </option>
 
-    ${clientes
+    ${clientesAtivosSelect
       .map(
         (cliente) => `
           <option value="${escaparHTML(
@@ -690,22 +800,30 @@ function renderizarRegistros() {
 
 function renderizarClientes() {
 
+  const clientesAtivos =
+    clientes.filter(
+      (cliente) => !cliente.arquivado
+    );
+
+  const clientesArquivados =
+    clientes.filter(
+      (cliente) => cliente.arquivado
+    );
+
   contadorClientes.textContent =
-    `${clientes.length} ${
-      clientes.length === 1
+    `${clientesAtivos.length} ${
+      clientesAtivos.length === 1
         ? "cliente"
         : "clientes"
     }`;
 
-
   listaClientesCadastrados.innerHTML =
-    clientes.length
-
-      ? clientes
+    clientesAtivos.length
+      ? clientesAtivos
           .map(
             (cliente) => `
 
-              <article class="cliente-card">
+              <article class="cliente-card" data-cliente-id="${cliente.id}">
 
                 <strong>
                   ${escaparHTML(
@@ -730,6 +848,38 @@ function renderizarClientes() {
                   )}
                 </small>
 
+                ${
+                  podeGerenciarClientes()
+                    ? `
+                      <div class="cliente-card-actions">
+                        <button
+                          class="btn btn-secondary btn-editar-cliente"
+                          type="button"
+                          data-cliente-id="${cliente.id}"
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          class="btn btn-archive btn-arquivar-cliente"
+                          type="button"
+                          data-cliente-id="${cliente.id}"
+                        >
+                          Arquivar
+                        </button>
+
+                        <button
+                          class="btn btn-danger btn-excluir-cliente"
+                          type="button"
+                          data-cliente-id="${cliente.id}"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    `
+                    : ""
+                }
+
               </article>
 
             `
@@ -738,12 +888,88 @@ function renderizarClientes() {
 
       : `
           <p class="empty-inline">
-            Nenhum cliente cadastrado.
+            Nenhum cliente ativo cadastrado.
           </p>
         `;
 
-  preencherSelectClientes();
+  if (
+    listaClientesArquivados &&
+    contadorClientesArquivados
+  ) {
 
+    contadorClientesArquivados.textContent =
+      `${clientesArquivados.length} ${
+        clientesArquivados.length === 1
+          ? "cliente arquivado"
+          : "clientes arquivados"
+      }`;
+
+    listaClientesArquivados.innerHTML =
+      clientesArquivados.length
+        ? clientesArquivados
+            .map(
+              (cliente) => `
+                <article class="cliente-card cliente-card-arquivado" data-cliente-id="${cliente.id}">
+
+                  <strong>
+                    ${escaparHTML(
+                      cliente.nomeFantasia
+                    )}
+                  </strong>
+
+                  <span>
+                    ${escaparHTML(
+                      cliente.razaoSocial
+                    )}
+                  </span>
+
+                  <small>
+                    CNPJ:
+                    ${escaparHTML(
+                      cliente.cnpjFormatado ||
+                      formatarCNPJ(
+                        cliente.cnpj ||
+                        cliente.id
+                      )
+                    )}
+                  </small>
+
+                  ${
+                    podeGerenciarClientes()
+                      ? `
+                        <div class="cliente-card-actions">
+                          <button
+                            class="btn btn-success btn-desarquivar-cliente"
+                            type="button"
+                            data-cliente-id="${cliente.id}"
+                          >
+                            Desarquivar
+                          </button>
+
+                          <button
+                            class="btn btn-danger btn-excluir-cliente"
+                            type="button"
+                            data-cliente-id="${cliente.id}"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      `
+                      : ""
+                  }
+
+                </article>
+              `
+            )
+            .join("")
+        : `
+            <p class="empty-inline">
+              Nenhum cliente arquivado.
+            </p>
+          `;
+  }
+
+  preencherSelectClientes();
 }
 
 
@@ -759,7 +985,7 @@ function buscarClientesHistorico(termo) {
   const termoNumerico =
     somenteNumeros(termo);
 
-  return clientes.filter((cliente) => {
+  return clientes.filter((cliente) => !cliente.arquivado).filter((cliente) => {
 
     const texto =
       normalizar(`
@@ -1381,11 +1607,6 @@ function iniciarAprovacoes() {
   }
 
 
-  painelAprovacoes.classList.remove(
-    "hidden"
-  );
-
-
   if (cancelarAprovacoes) {
 
     cancelarAprovacoes();
@@ -1534,8 +1755,367 @@ function limparFormularioCliente() {
 
   formCliente.reset();
 
+  clienteEditandoId = null;
+
+  cnpjCliente.readOnly = false;
+
+  const botao =
+    formCliente.querySelector(
+      'button[type="submit"]'
+    );
+
+  if (botao) {
+    botao.textContent = "Cadastrar cliente";
+  }
+
+  if (limparCliente) {
+    limparCliente.textContent = "Limpar";
+  }
+
   cnpjCliente.focus();
 
+}
+
+
+/* ========================================= */
+/* EDITAR / EXCLUIR CLIENTE */
+/* ========================================= */
+
+function iniciarEdicaoCliente(id) {
+
+  if (!podeGerenciarClientes()) {
+    mostrarToast("Você não tem permissão para editar clientes.", true);
+    return;
+  }
+
+  const cliente =
+    clientes.find(
+      (item) => item.id === id
+    );
+
+  if (!cliente) {
+    mostrarToast(
+      "Cliente não encontrado.",
+      true
+    );
+    return;
+  }
+
+  clienteEditandoId = cliente.id;
+
+  cnpjCliente.value =
+    cliente.cnpjFormatado ||
+    formatarCNPJ(
+      cliente.cnpj ||
+      cliente.id
+    );
+
+  // O CNPJ fica bloqueado durante a edição porque ele é
+  // o identificador que vincula o cliente aos dados já existentes.
+  cnpjCliente.readOnly = true;
+
+  razaoSocialCliente.value =
+    cliente.razaoSocial || "";
+
+  nomeFantasiaCliente.value =
+    cliente.nomeFantasia || "";
+
+  const botao =
+    formCliente.querySelector(
+      'button[type="submit"]'
+    );
+
+  if (botao) {
+    botao.textContent =
+      "Salvar alterações";
+  }
+
+  if (limparCliente) {
+    limparCliente.textContent =
+      "Cancelar edição";
+  }
+
+  formCliente.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+}
+
+
+async function excluirClienteCadastrado(id) {
+
+  if (!podeGerenciarClientes()) {
+    mostrarToast("Você não tem permissão para excluir clientes.", true);
+    return;
+  }
+
+  const cliente =
+    clientes.find(
+      (item) => item.id === id
+    );
+
+  if (!cliente) {
+    mostrarToast(
+      "Cliente não encontrado.",
+      true
+    );
+    return;
+  }
+
+  const nome =
+    cliente.nomeFantasia ||
+    cliente.razaoSocial ||
+    "este cliente";
+
+  const confirmou =
+    window.confirm(
+      `Deseja realmente excluir o cliente "${nome}"?\n\nOs atendimentos já registrados não serão apagados.`
+    );
+
+  if (!confirmou) return;
+
+  try {
+
+    await deleteDoc(
+      doc(
+        db,
+        "clientes",
+        cliente.id
+      )
+    );
+
+    if (
+      clienteEditandoId === cliente.id
+    ) {
+      limparFormularioCliente();
+    }
+
+    mostrarToast(
+      "Cliente excluído com sucesso."
+    );
+
+  } catch (erro) {
+
+    console.error(
+      "Erro ao excluir cliente:",
+      erro
+    );
+
+    mostrarToast(
+      "Não foi possível excluir o cliente.",
+      true
+    );
+  }
+}
+
+
+listaClientesCadastrados.addEventListener(
+  "click",
+  (evento) => {
+
+    const editar =
+      evento.target.closest(
+        ".btn-editar-cliente"
+      );
+
+    const arquivar =
+      evento.target.closest(
+        ".btn-arquivar-cliente"
+      );
+
+    const excluir =
+      evento.target.closest(
+        ".btn-excluir-cliente"
+      );
+
+    if (editar) {
+      iniciarEdicaoCliente(
+        editar.dataset.clienteId
+      );
+      return;
+    }
+
+    if (arquivar) {
+      arquivarClienteCadastrado(
+        arquivar.dataset.clienteId
+      );
+      return;
+    }
+
+    if (excluir) {
+      excluirClienteCadastrado(
+        excluir.dataset.clienteId
+      );
+    }
+  }
+);
+
+
+listaClientesArquivados?.addEventListener(
+  "click",
+  (evento) => {
+
+    const desarquivar =
+      evento.target.closest(
+        ".btn-desarquivar-cliente"
+      );
+
+    const excluir =
+      evento.target.closest(
+        ".btn-excluir-cliente"
+      );
+
+    if (desarquivar) {
+      desarquivarClienteCadastrado(
+        desarquivar.dataset.clienteId
+      );
+      return;
+    }
+
+    if (excluir) {
+      excluirClienteCadastrado(
+        excluir.dataset.clienteId
+      );
+    }
+  }
+);
+
+
+/* ========================================= */
+/* ARQUIVAR / DESARQUIVAR CLIENTE */
+/* ========================================= */
+
+async function arquivarClienteCadastrado(id) {
+
+  if (!podeGerenciarClientes()) {
+    mostrarToast("Você não tem permissão para arquivar clientes.", true);
+    return;
+  }
+
+  const cliente =
+    clientes.find(
+      (item) => item.id === id
+    );
+
+  if (!cliente) {
+    mostrarToast(
+      "Cliente não encontrado.",
+      true
+    );
+    return;
+  }
+
+  const nome =
+    cliente.nomeFantasia ||
+    cliente.razaoSocial ||
+    "este cliente";
+
+  const confirmou =
+    window.confirm(
+      `Deseja arquivar o cliente "${nome}"?\n\nO cadastro, histórico e checklist serão preservados e poderão ser restaurados depois.`
+    );
+
+  if (!confirmou) return;
+
+  try {
+
+    await updateDoc(
+      doc(
+        db,
+        "clientes",
+        cliente.id
+      ),
+      {
+        arquivado: true,
+        arquivadoEm:
+          serverTimestamp(),
+        arquivadoPor:
+          usuarioAtualEmail,
+        atualizadoEm:
+          serverTimestamp(),
+      }
+    );
+
+    if (
+      clienteEditandoId === cliente.id
+    ) {
+      limparFormularioCliente();
+    }
+
+    mostrarToast(
+      "Cliente arquivado com sucesso."
+    );
+
+  } catch (erro) {
+
+    console.error(
+      "Erro ao arquivar cliente:",
+      erro
+    );
+
+    mostrarToast(
+      "Não foi possível arquivar o cliente.",
+      true
+    );
+  }
+}
+
+
+async function desarquivarClienteCadastrado(id) {
+
+  if (!podeGerenciarClientes()) {
+    mostrarToast("Você não tem permissão para desarquivar clientes.", true);
+    return;
+  }
+
+  const cliente =
+    clientes.find(
+      (item) => item.id === id
+    );
+
+  if (!cliente) {
+    mostrarToast(
+      "Cliente não encontrado.",
+      true
+    );
+    return;
+  }
+
+  try {
+
+    await updateDoc(
+      doc(
+        db,
+        "clientes",
+        cliente.id
+      ),
+      {
+        arquivado: false,
+        desarquivadoEm:
+          serverTimestamp(),
+        desarquivadoPor:
+          usuarioAtualEmail,
+        atualizadoEm:
+          serverTimestamp(),
+      }
+    );
+
+    mostrarToast(
+      "Cliente restaurado com sucesso."
+    );
+
+  } catch (erro) {
+
+    console.error(
+      "Erro ao desarquivar cliente:",
+      erro
+    );
+
+    mostrarToast(
+      "Não foi possível restaurar o cliente.",
+      true
+    );
+  }
 }
 
 
@@ -1956,6 +2536,20 @@ async function excluirRegistro(id) {
 
 
 /* ========================================= */
+/* ========================================= */
+/* ENTER PARA ENTRAR NO SISTEMA */
+/* ========================================= */
+
+[emailLogin, senhaLogin].forEach((campo) => {
+  campo.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") {
+      evento.preventDefault();
+      formLogin.requestSubmit();
+    }
+  });
+});
+
+
 /* LOGIN / CADASTRO */
 /* ========================================= */
 
@@ -2186,142 +2780,167 @@ formCadastro.addEventListener(
 
 
 /* ========================================= */
-/* CADASTRAR CLIENTE */
+/* CADASTRAR / EDITAR CLIENTE */
 /* ========================================= */
 
 formCliente.addEventListener(
   "submit",
   async (evento) => {
 
-    evento.preventDefault();
+    if (
+      clienteEditandoId &&
+      !podeGerenciarClientes()
+    ) {
+      evento.preventDefault();
+      mostrarToast(
+        "Você não tem permissão para editar clientes.",
+        true
+      );
+      limparFormularioCliente();
+      return;
+    }
 
+    evento.preventDefault();
 
     const cnpj =
       somenteNumeros(
         cnpjCliente.value
       );
 
-
     const razaoSocial =
-      razaoSocialCliente.value.trim();
-
+      formatarMaiusculo(
+        razaoSocialCliente.value
+      );
 
     const nomeFantasiaEmpresa =
-      nomeFantasiaCliente.value.trim();
+      formatarMaiusculo(
+        nomeFantasiaCliente.value
+      );
 
+    razaoSocialCliente.value =
+      razaoSocial;
+
+    nomeFantasiaCliente.value =
+      nomeFantasiaEmpresa;
 
     if (
       !validarCNPJBasico(cnpj)
     ) {
-
       mostrarToast(
         "Digite um CNPJ com 14 números.",
         true
       );
-
       return;
-
     }
-
 
     if (
       !razaoSocial ||
       !nomeFantasiaEmpresa
     ) {
-
       mostrarToast(
         "Preencha todos os dados do cliente.",
         true
       );
-
       return;
-
     }
-
 
     const botao =
       formCliente.querySelector(
         'button[type="submit"]'
       );
 
-
     botao.disabled = true;
 
     botao.textContent =
-      "Cadastrando...";
-
+      clienteEditandoId
+        ? "Salvando..."
+        : "Cadastrando...";
 
     try {
 
-      const clienteDocumento =
-        doc(
-          db,
-          "clientes",
-          cnpj
+      if (clienteEditandoId) {
+
+        await updateDoc(
+          doc(
+            db,
+            "clientes",
+            clienteEditandoId
+          ),
+          {
+            razaoSocial,
+            nomeFantasia:
+              nomeFantasiaEmpresa,
+            atualizadoEm:
+              serverTimestamp(),
+            atualizadoPor:
+              usuarioAtualEmail,
+          }
         );
-
-
-      const clienteExistente =
-        await getDoc(
-          clienteDocumento
-        );
-
-
-      if (
-        clienteExistente.exists()
-      ) {
 
         mostrarToast(
-          "Já existe um cliente com esse CNPJ.",
-          true
+          "Cliente atualizado com sucesso."
         );
 
-        return;
+        limparFormularioCliente();
 
-      }
+      } else {
 
+        const clienteDocumento =
+          doc(
+            db,
+            "clientes",
+            cnpj
+          );
 
-      await setDoc(
-        clienteDocumento,
-        {
+        const clienteExistente =
+          await getDoc(
+            clienteDocumento
+          );
 
-          cnpj,
-
-          cnpjFormatado:
-            formatarCNPJ(cnpj),
-
-          razaoSocial,
-
-          nomeFantasia:
-            nomeFantasiaEmpresa,
-
-          criadoEm:
-            serverTimestamp(),
-
-          criadoPor:
-            usuarioAtualEmail,
-
+        if (
+          clienteExistente.exists()
+        ) {
+          mostrarToast(
+            "Já existe um cliente com esse CNPJ.",
+            true
+          );
+          return;
         }
-      );
 
+        await setDoc(
+          clienteDocumento,
+          {
+            cnpj,
+            cnpjFormatado:
+              formatarCNPJ(cnpj),
+            razaoSocial,
+            nomeFantasia:
+              nomeFantasiaEmpresa,
+            criadoEm:
+              serverTimestamp(),
+            criadoPor:
+              usuarioAtualEmail,
+          }
+        );
 
-      limparFormularioCliente();
+        limparFormularioCliente();
 
-
-      mostrarToast(
-        "Cliente cadastrado com sucesso."
-      );
+        mostrarToast(
+          "Cliente cadastrado com sucesso."
+        );
+      }
 
     } catch (erro) {
 
       console.error(
-        "Erro ao cadastrar cliente:",
+        "Erro ao salvar cliente:",
         erro
       );
 
-
       mostrarToast(
-        "Não foi possível cadastrar o cliente.",
+        clienteEditandoId
+          ? "Não foi possível atualizar o cliente."
+          : "Não foi possível cadastrar o cliente.",
         true
       );
 
@@ -2330,10 +2949,10 @@ formCliente.addEventListener(
       botao.disabled = false;
 
       botao.textContent =
-        "Cadastrar cliente";
-
+        clienteEditandoId
+          ? "Salvar alterações"
+          : "Cadastrar cliente";
     }
-
   }
 );
 
@@ -2519,6 +3138,10 @@ onAuthStateChanged(
 
     usuarioAtualUid = "";
 
+    if (saudacaoUsuario) {
+      saudacaoUsuario.textContent = "";
+    }
+
 
     if (!usuario) {
 
@@ -2664,6 +3287,14 @@ onAuthStateChanged(
       aplicacao.classList.remove(
         "hidden"
       );
+
+
+      atualizarSaudacaoUsuario();
+
+
+      // Sempre inicia somente com os cards do menu principal.
+      // Isso evita que painéis antigos apareçam após o login.
+      mostrarMenuPrincipalSistema();
 
 
       configurarPermissoesVisuais();
@@ -2873,10 +3504,16 @@ form.addEventListener(
     }
 
 
-    /* GARANTE MAIÚSCULAS ANTES DE SALVAR */
+    /* GARANTE A FORMATAÇÃO ANTES DE SALVAR */
 
     comentarios.value =
       comentarios.value.toUpperCase();
+
+    nomeCliente.value =
+      formatarNomePessoa(nomeCliente.value);
+
+    nomeFantasia.value =
+      formatarMaiusculo(nomeFantasia.value);
 
 
     const dados = {
@@ -2901,17 +3538,19 @@ form.addEventListener(
         ),
 
       razaoSocial:
-        cliente.razaoSocial || "",
+        formatarMaiusculo(cliente.razaoSocial || ""),
 
       numeroLogin:
         numeroLogin.value.trim(),
 
       nomeCliente:
-        nomeCliente.value.trim(),
+        formatarNomePessoa(nomeCliente.value),
 
       nomeFantasia:
-        cliente.nomeFantasia ||
-        nomeFantasia.value.trim(),
+        formatarMaiusculo(
+          cliente.nomeFantasia ||
+          nomeFantasia.value
+        ),
 
       categoriaAtendimento:
         categoriaAtendimento.value,
@@ -3275,3 +3914,202 @@ document.addEventListener(
 
   }
 );
+
+/* ========================================================= */
+/* MENU PRINCIPAL EM CARDS - NAVEGAÇÃO POR ÁREAS             */
+/* ========================================================= */
+
+const menuPrincipalSistema = $("menuPrincipalSistema");
+const barraVoltarMenu = $("barraVoltarMenu");
+const btnVoltarMenuPrincipal = $("btnVoltarMenuPrincipal");
+const tituloAreaAtual = $("tituloAreaAtual");
+const layoutPrincipal = document.querySelector("main.layout");
+
+const painelAtendimentosRegistrados = $("painelAtendimentosRegistrados");
+const painelFormularioAtendimento = $("painelFormularioAtendimento");
+const painelCadastroClientes = $("painelCadastroClientes");
+const painelClientesArquivados = $("painelClientesArquivados");
+const painelHistoricoMenu = $("painelHistoricoMenu");
+
+const campoHistoricoMenu = $("campoHistoricoMenu");
+const btnVerHistoricoMenu = $("btnVerHistoricoMenu");
+const sugestoesHistoricoMenu = $("sugestoesHistoricoMenu");
+
+const nomesAreasSistema = {
+  registro: "Registro de Atendimento",
+  dashboard: "Dashboard",
+  historico: "Histórico de Atendimentos",
+  clientes: "Cadastrar Novo Cliente",
+  acompanhamento: "Acompanhamento de Clientes",
+};
+
+function paineisNavegaveisSistema() {
+  return [
+    painelAtendimentosRegistrados,
+    painelFormularioAtendimento,
+    dashboardPendencias,
+    painelHistoricoMenu,
+    painelCadastroClientes,
+    painelClientesArquivados,
+    painelAcompanhamento,
+  ].filter(Boolean);
+}
+
+function ocultarPaineisSistema() {
+  paineisNavegaveisSistema().forEach((painel) => {
+    painel.classList.add("hidden");
+  });
+
+  // Solicitações de acesso ficam fora das áreas do menu.
+  // Elas só podem aparecer na tela principal para o administrador.
+  painelAprovacoes?.classList.add("hidden");
+}
+
+function mostrarMenuPrincipalSistema() {
+  ocultarPaineisSistema();
+
+  menuPrincipalSistema?.classList.remove("hidden");
+  barraVoltarMenu?.classList.add("hidden");
+  layoutPrincipal?.classList.remove("modo-area");
+
+  // Na tela principal, restaura o painel de aprovações
+  // somente quando o usuário atual for administrador.
+  configurarPermissoesVisuais();
+
+  if (tituloAreaAtual) {
+    tituloAreaAtual.textContent = "";
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+}
+
+function abrirAreaSistema(area) {
+  ocultarPaineisSistema();
+
+  menuPrincipalSistema?.classList.add("hidden");
+  barraVoltarMenu?.classList.remove("hidden");
+  layoutPrincipal?.classList.add("modo-area");
+
+  if (tituloAreaAtual) {
+    tituloAreaAtual.textContent =
+      nomesAreasSistema[area] || "";
+  }
+
+  if (area === "registro") {
+    // Ao entrar em Registro de Atendimento,
+    // mostra somente o formulário para criar um novo registro.
+    painelFormularioAtendimento?.classList.remove("hidden");
+  }
+
+  if (area === "dashboard") {
+    dashboardPendencias?.classList.remove("hidden");
+  }
+
+  if (area === "historico") {
+    painelHistoricoMenu?.classList.remove("hidden");
+    setTimeout(() => campoHistoricoMenu?.focus(), 50);
+  }
+
+  if (area === "clientes") {
+    painelCadastroClientes?.classList.remove("hidden");
+    painelClientesArquivados?.classList.remove("hidden");
+  }
+
+  if (area === "acompanhamento") {
+    painelAcompanhamento?.classList.remove("hidden");
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+}
+
+document.querySelectorAll("[data-abrir-area]").forEach((card) => {
+  card.addEventListener("click", () => {
+    abrirAreaSistema(card.dataset.abrirArea);
+  });
+});
+
+btnVoltarMenuPrincipal?.addEventListener(
+  "click",
+  mostrarMenuPrincipalSistema
+);
+
+/* O botão + Novo registro abre diretamente a área de Registro. */
+btnNovo?.addEventListener("click", () => {
+  abrirAreaSistema("registro");
+
+  setTimeout(() => {
+    painelFormularioAtendimento?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, 80);
+});
+
+/* Histórico: reaproveita a lógica já existente no script original. */
+function sincronizarHistoricoMenuComOriginal() {
+  if (!campoHistoricoMenu || !campoHistorico) return;
+
+  campoHistorico.value = campoHistoricoMenu.value;
+
+  campoHistorico.dispatchEvent(
+    new Event("input", { bubbles: true })
+  );
+}
+
+campoHistoricoMenu?.addEventListener("input", () => {
+  sincronizarHistoricoMenuComOriginal();
+
+  if (!sugestoesHistoricoMenu || !sugestoesHistorico) return;
+
+  setTimeout(() => {
+    sugestoesHistoricoMenu.innerHTML =
+      sugestoesHistorico.innerHTML;
+
+    sugestoesHistoricoMenu.classList.toggle(
+      "hidden",
+      sugestoesHistorico.classList.contains("hidden")
+    );
+  }, 0);
+});
+
+sugestoesHistoricoMenu?.addEventListener("click", (evento) => {
+  const sugestao = evento.target.closest("button");
+
+  if (!sugestao) return;
+
+  const botoesOriginais =
+    [...sugestoesHistorico.querySelectorAll("button")];
+
+  const indice =
+    [...sugestoesHistoricoMenu.querySelectorAll("button")]
+      .indexOf(sugestao);
+
+  if (indice >= 0 && botoesOriginais[indice]) {
+    botoesOriginais[indice].click();
+
+    campoHistoricoMenu.value =
+      campoHistorico.value;
+
+    sugestoesHistoricoMenu.classList.add("hidden");
+  }
+});
+
+btnVerHistoricoMenu?.addEventListener("click", () => {
+  sincronizarHistoricoMenuComOriginal();
+  btnVerHistorico?.click();
+});
+
+/* Garante o estado inicial dos painéis desde o carregamento da página. */
+document.addEventListener("DOMContentLoaded", () => {
+  ocultarPaineisSistema();
+  menuPrincipalSistema?.classList.remove("hidden");
+  barraVoltarMenu?.classList.add("hidden");
+  layoutPrincipal?.classList.remove("modo-area");
+});
+

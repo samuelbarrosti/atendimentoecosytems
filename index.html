@@ -16,7 +16,7 @@
 
   <title>Registro de Atendimento Ecosystems</title>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260815-1" />
 </head>
 
 <body>
@@ -243,37 +243,136 @@
 
       </div>
 
-      <div class="topbar-actions">
+      <div class="topbar-right">
 
-        <span
-          id="statusNuvem"
-          class="cloud-status"
+        <!-- AGENDA DE HOJE -->
+        <div
+          id="agendaHojeTopbar"
+          class="agenda-topbar"
+          aria-live="polite"
         >
-          Conectando...
-        </span>
+          <div class="agenda-topbar-loading">
+            Carregando agenda de hoje...
+          </div>
+        </div>
 
-        <button
-          id="btnSair"
-          class="btn btn-secondary"
-          type="button"
-        >
-          Sair
-        </button>
+        <div class="topbar-actions">
 
-        <button
-          id="btnNovo"
-          class="btn btn-primary"
-          type="button"
-        >
-          + Novo registro
-        </button>
+          <span
+            id="statusNuvem"
+            class="cloud-status"
+          >
+            Conectando...
+          </span>
+
+          <span
+            id="saudacaoUsuario"
+            class="saudacao-usuario"
+            aria-live="polite"
+          ></span>
+
+          <button
+            id="btnSair"
+            class="btn btn-secondary"
+            type="button"
+          >
+            Sair
+          </button>
+
+          <button
+            id="btnNovo"
+            class="btn btn-primary"
+            type="button"
+          >
+            + Novo registro
+          </button>
+
+        </div>
 
       </div>
 
     </header>
 
 
+
+    <!-- ========================= -->
+    <!-- MENU PRINCIPAL DO SISTEMA -->
+    <!-- ========================= -->
+    <section id="menuPrincipalSistema" class="menu-sistema" aria-label="Menu principal">
+      <div class="menu-sistema-cabecalho">
+        <p class="eyebrow">ACESSO RÁPIDO</p>
+        <h2>O que você deseja acessar?</h2>
+        <p>Escolha uma área do sistema.</p>
+      </div>
+
+      <div class="menu-sistema-grid">
+        <button class="menu-sistema-card" type="button" data-abrir-area="registro">
+          <span class="menu-sistema-icone" aria-hidden="true">📝</span>
+          <strong>Registro de Atendimento</strong>
+          <small>Cadastre um novo atendimento.</small>
+        </button>
+
+        <button class="menu-sistema-card" type="button" data-abrir-area="dashboard">
+          <span class="menu-sistema-icone" aria-hidden="true">📊</span>
+          <strong>Dashboard</strong>
+          <small>Visualize pendências e andamento dos clientes.</small>
+        </button>
+
+        <button class="menu-sistema-card" type="button" data-abrir-area="historico">
+          <span class="menu-sistema-icone" aria-hidden="true">🕘</span>
+          <strong>Histórico de Atendimentos</strong>
+          <small>Pesquise um cliente e consulte todo o histórico.</small>
+        </button>
+
+        <button class="menu-sistema-card" type="button" data-abrir-area="clientes">
+          <span class="menu-sistema-icone" aria-hidden="true">👤</span>
+          <strong>Cadastrar Novo Cliente</strong>
+          <small>Cadastre, edite e consulte clientes e arquivados.</small>
+        </button>
+
+        <button class="menu-sistema-card" type="button" data-abrir-area="acompanhamento">
+          <span class="menu-sistema-icone" aria-hidden="true">✅</span>
+          <strong>Acompanhamento de Clientes</strong>
+          <small>Acesse os checklists de implantação e serviços.</small>
+        </button>
+      </div>
+    </section>
+
+    <div id="barraVoltarMenu" class="barra-voltar-menu hidden">
+      <button id="btnVoltarMenuPrincipal" class="btn btn-secondary btn-voltar-menu" type="button">
+        ← Voltar ao menu
+      </button>
+      <strong id="tituloAreaAtual"></strong>
+    </div>
+
     <main class="layout">
+
+      <section id="painelHistoricoMenu" class="panel tela-area tela-historico hidden">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">HISTÓRICO DE ATENDIMENTOS</p>
+            <h2>Consultar histórico completo</h2>
+            <p>Pesquise por nome do cliente, nome fantasia ou CNPJ.</p>
+          </div>
+        </div>
+
+        <div class="historico-menu-conteudo">
+          <p>Use a pesquisa abaixo para localizar o cliente e abrir o histórico completo.</p>
+          <div class="historico-menu-acoes">
+            <input
+              id="campoHistoricoMenu"
+              type="search"
+              placeholder="Digite o nome, nome fantasia ou CNPJ..."
+              autocomplete="off"
+            />
+            <button id="btnVerHistoricoMenu" class="btn btn-primary" type="button">
+              Ver histórico
+            </button>
+          </div>
+          <div id="sugestoesHistoricoMenu" class="history-suggestions historico-menu-sugestoes hidden"></div>
+        </div>
+      </section>
+
 
 
       <!-- ========================= -->
@@ -281,7 +380,8 @@
       <!-- ========================= -->
 
       <section
-        class="panel list-panel"
+        id="painelAtendimentosRegistrados"
+        class="panel list-panel tela-area tela-registro hidden"
         aria-labelledby="tituloLista"
       >
 
@@ -369,7 +469,7 @@
 
       <section
         id="painelAprovacoes"
-        class="panel approvals-panel hidden"
+        class="panel approvals-panel hidden painel-auxiliar-home"
         aria-labelledby="tituloAprovacoes"
       >
 
@@ -402,7 +502,8 @@
       <!-- ========================= -->
 
       <section
-        class="panel clientes-panel"
+        id="painelCadastroClientes"
+        class="panel clientes-panel tela-area tela-clientes hidden"
         aria-labelledby="tituloCadastroCliente"
       >
 
@@ -528,12 +629,176 @@
       </section>
 
 
+
+      <!-- ========================= -->
+      <!-- DASHBOARD DE PENDÊNCIAS -->
+      <!-- ========================= -->
+
+      <section
+        id="dashboardPendencias"
+        class="panel dashboard-pendencias-panel tela-area tela-dashboard hidden"
+        aria-labelledby="tituloDashboardPendencias"
+      >
+        <div class="panel-header dashboard-pendencias-header">
+          <div>
+            <p class="eyebrow">VISÃO GERAL DOS CLIENTES</p>
+            <h2 id="tituloDashboardPendencias">Dashboard de pendências</h2>
+            <p>
+              Clique em uma categoria para ver os clientes que ainda não concluíram o checklist.
+            </p>
+          </div>
+
+          <span id="totalClientesComPendencias" class="dashboard-pendencias-alerta">
+            0 clientes com pendências
+          </span>
+        </div>
+
+        <div
+          id="cardsDashboardPendencias"
+          class="dashboard-pendencias-grid"
+          aria-live="polite"
+        ></div>
+
+        <div
+          id="listaDashboardPendencias"
+          class="dashboard-pendencias-detalhes hidden"
+          aria-live="polite"
+        >
+          <div class="dashboard-pendencias-detalhes-topo">
+            <div>
+              <p class="eyebrow">CLIENTES QUE FALTAM</p>
+              <h3 id="tituloListaDashboardPendencias">Pendências</h3>
+              <p id="subtituloListaDashboardPendencias"></p>
+            </div>
+
+            <button
+              id="fecharListaDashboardPendencias"
+              class="btn btn-secondary"
+              type="button"
+            >
+              Fechar lista
+            </button>
+          </div>
+
+          <div id="clientesDashboardPendencias" class="dashboard-clientes-lista"></div>
+        </div>
+      </section>
+
+      <!-- ========================= -->
+      <!-- ACOMPANHAMENTO DE CLIENTES -->
+      <!-- ========================= -->
+
+      <section
+        id="painelAcompanhamento"
+        class="panel acompanhamento-panel tela-area tela-acompanhamento hidden"
+        aria-labelledby="tituloAcompanhamento"
+      >
+
+        <div class="panel-header acompanhamento-header">
+          <div>
+            <p class="eyebrow">CONTROLE SEPARADO DOS ATENDIMENTOS</p>
+            <h2 id="tituloAcompanhamento">Acompanhamento de clientes</h2>
+            <p>
+              Consulte e marque o que está pendente, em andamento ou concluído para cada cliente.
+            </p>
+          </div>
+
+          <span id="alertaPendenciasAcompanhamento" class="acompanhamento-alerta">
+            0 pendências
+          </span>
+        </div>
+
+        <div class="acompanhamento-resumo" aria-label="Resumo do acompanhamento">
+          <article class="acompanhamento-resumo-card resumo-pendente">
+            <span>Pendentes</span>
+            <strong id="totalAcompanhamentoPendente">0</strong>
+          </article>
+
+          <article class="acompanhamento-resumo-card resumo-andamento">
+            <span>Em andamento</span>
+            <strong id="totalAcompanhamentoAndamento">0</strong>
+          </article>
+
+          <article class="acompanhamento-resumo-card resumo-concluido">
+            <span>Concluídos</span>
+            <strong id="totalAcompanhamentoConcluido">0</strong>
+          </article>
+        </div>
+
+        <div class="acompanhamento-filtros">
+          <div class="field field-full">
+            <label for="clienteAcompanhamento">Cliente</label>
+            <select id="clienteAcompanhamento">
+              <option value="">Selecione um cliente</option>
+            </select>
+            <small>
+              Este painel é independente dos registros de atendimento.
+            </small>
+          </div>
+
+          <div class="field">
+            <label for="filtroStatusAcompanhamento">Mostrar</label>
+            <select id="filtroStatusAcompanhamento">
+              <option value="todos">Todos</option>
+              <option value="pendente">Pendentes</option>
+              <option value="em-andamento">Em andamento</option>
+              <option value="concluido">Concluídos</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="resumoClienteAcompanhamento" class="acompanhamento-cliente-resumo hidden"></div>
+
+        <div
+          id="listaAcompanhamento"
+          class="acompanhamento-lista"
+          aria-live="polite"
+        >
+          <div class="empty-state">
+            <strong>Selecione um cliente.</strong>
+            <p>O checklist de implantação e serviços aparecerá aqui.</p>
+          </div>
+        </div>
+
+      </section>
+
+
+
+      <!-- ========================= -->
+      <!-- CLIENTES ARQUIVADOS -->
+      <!-- ========================= -->
+
+      <section
+        id="painelClientesArquivados"
+        class="panel clientes-arquivados-panel tela-area tela-clientes hidden"
+        aria-labelledby="tituloClientesArquivados"
+      >
+        <div class="panel-header">
+          <div>
+            <h2 id="tituloClientesArquivados">Clientes arquivados</h2>
+            <p id="contadorClientesArquivados">0 clientes arquivados</p>
+          </div>
+        </div>
+
+        <p class="clientes-arquivados-ajuda">
+          Clientes arquivados não aparecem nas listas normais nem no dashboard.
+          Você pode restaurá-los a qualquer momento.
+        </p>
+
+        <div
+          id="listaClientesArquivados"
+          class="clientes-cadastrados"
+          aria-live="polite"
+        ></div>
+      </section>
+
       <!-- ========================= -->
       <!-- FORMULÁRIO ATENDIMENTO -->
       <!-- ========================= -->
 
       <section
-        class="panel form-panel"
+        id="painelFormularioAtendimento"
+        class="panel form-panel tela-area tela-registro hidden"
         aria-labelledby="tituloFormulario"
       >
 
@@ -788,6 +1053,36 @@
           </div>
 
 
+
+          <!-- ANEXOS DO ATENDIMENTO -->
+
+          <div class="field">
+
+            <label for="anexosAtendimento">
+              Anexos do atendimento
+            </label>
+
+            <input
+              id="anexosAtendimento"
+              name="anexosAtendimento"
+              type="file"
+              accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"
+              multiple
+            />
+
+            <small>
+              Formatos permitidos: PNG, JPG, JPEG e PDF. Limite de 10 MB por arquivo.
+            </small>
+
+            <div
+              id="previewAnexos"
+              class="attachments-preview"
+              aria-live="polite"
+            ></div>
+
+          </div>
+
+
           <div class="form-actions">
 
             <button
@@ -978,7 +1273,12 @@
 
   <script
     type="module"
-    src="script.js"
+    src="script.js?v=20260815-1"
+  ></script>
+
+  <script
+    type="module"
+    src="acompanhamento.js?v=20260815-1"
   ></script>
 
 </body>
